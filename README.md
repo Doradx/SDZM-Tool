@@ -11,7 +11,7 @@ The first version has been released at [Release](https://github.com/Doradx/RJSFR
 Run ```RJSFRD Tool Installer.exe``` to install, and a shortcut will be created on the desktop.
 ## Main Window
 Double click the shortcut ```RJSFRD Tool``` to start the program.
-![Main Window](https://github.com/Doradx/RJSFRD-Tool/releases/tag/v0.1.0)
+![Main Window](https://raw.githubusercontent.com/Doradx/RJSFRD-Tool/master/images/main-window.png)
 
 # Author
 Dorad
