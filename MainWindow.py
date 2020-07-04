@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
 
     def info(self):
         msgBox = QMessageBox(QMessageBox.NoIcon, 'DSFRD Tool',
-                             'Discontinuity Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
+                             'Rock Joint Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         # QMessageBox.information(self, 'DSFRD Tool',
         #                         'Discontinuity Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         msgBox.setIconPixmap(QPixmap('./images/icons/logo.png'))
@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
 
     def about(self):
         QMessageBox.information(self, 'About Us',
-                                'DSFRD Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
+                                'RJSFRD Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
                                     datetime.datetime.now().year))
 
     def updateActionState(self):
