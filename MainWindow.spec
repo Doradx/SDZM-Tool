@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['MainWindow.py'],
-             pathex=['C:\\Users\\cug_x\\Desktop\\DFRETool\\code'],
+             pathex=['G:\\Study\\Graduate\\1.科研\\2020.7Rock Joint Shear Failure Region Detection Tool\\code'],
              binaries=[],
              datas=[('images','images')],
              hiddenimports=['sklearn.utils._cython_blas', 'sklearn.neighbors.typedefs', 'sklearn.neighbors.quad_tree', 'sklearn.tree._utils', 'skimage.feature._orb_descriptor_positions', 'pkg_resources.py2_warn'],
@@ -21,12 +21,12 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='MainWindow',
+          name='MainWindow_v1.1.0',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False , icon='.\images\icons\logo.ico')
+          console=False , icon='images\\icons\\logo.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

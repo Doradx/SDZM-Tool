@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         '''
 
         # center widget
-        self.setWindowTitle('Discontinuity Shear Failure Region Detection Tool v1.0.0 (By Dorad, cug_xia@cug.edu.cn)')
+        self.setWindowTitle('Shear Failure Regions of Rock Joints Measurement Tool v1.0.0 (By Dorad, cug_xia@cug.edu.cn)')
         self.setWindowIcon(QIcon('./images/icons/logo.png'))
         self.originView = ImageViewerWithPolygon(allowAddPolygonManually=True, allowDelPolygonManually=True)
         self.resultView = ImageViewerWithLabel()
@@ -350,8 +350,8 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl('https://blog.cuger.cn'))
 
     def info(self):
-        msgBox = QMessageBox(QMessageBox.NoIcon, 'DSFRD Tool',
-                             'Rock Joint Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
+        msgBox = QMessageBox(QMessageBox.NoIcon, 'SFRM Tool',
+                             'Shear Failure Regions of Rock Joints Measurement Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         # QMessageBox.information(self, 'DSFRD Tool',
         #                         'Discontinuity Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         msgBox.setIconPixmap(QPixmap('./images/icons/logo.png'))
@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
 
     def about(self):
         QMessageBox.information(self, 'About Us',
-                                'RJSFRD Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
+                                'SFRM Tool is designed to determine shear failure regions of rock joints based on image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
                                     datetime.datetime.now().year))
 
     def updateActionState(self):
