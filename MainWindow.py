@@ -17,7 +17,7 @@ import numpy as np
 from PyQt5.QtCore import QPointF, QLineF, Qt, QUrl
 from PyQt5.QtGui import QIcon, QPolygonF, QDesktopServices, QPixmap, QCloseEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QAction, QLabel, QProgressBar, QFileDialog, \
-    QMessageBox, QInputDialog, QMainWindow
+    QMessageBox, QInputDialog, QMainWindow, QProgressDialog
 
 from ImageViewerWithLabel import ImageViewerWithLabel
 from ImageViewerWithPolygon import ImageViewerWithPolygon
@@ -37,7 +37,8 @@ class MainWindow(QMainWindow):
         '''
 
         # center widget
-        self.setWindowTitle('Shear Failure Regions of Rock Joints Measurement Tool v1.0.0 (By Dorad, cug_xia@cug.edu.cn)')
+        self.setWindowTitle(
+            'Shear Failure Regions of Rock Joints Measurement Tool v1.0.0 (By Dorad, cug_xia@cug.edu.cn)')
         self.setWindowIcon(QIcon('./images/icons/logo.png'))
         self.originView = ImageViewerWithPolygon(allowAddPolygonManually=True, allowDelPolygonManually=True)
         self.resultView = ImageViewerWithLabel()
@@ -85,12 +86,16 @@ class MainWindow(QMainWindow):
         self.setRealScaleAction.triggered.connect(self.setRealScale)
         self.imageCropAction = QAction(QIcon('./images/icons/crop.png'), 'Crop the origin image', self)
         self.imageCropAction.triggered.connect(self.cropImage)
-        # Analysis Menu
         self.drawPolygonAction = QAction(QIcon('./images/icons/polygon.png'), 'Create a new polygon on origin image',
                                          self)
         self.drawPolygonAction.triggered.connect(self.drawPolygon)
-        self.deleteSelectedPolygonAction = QAction(QIcon('./images/icons/delete.png'), 'Delete selected polygon', self)
+        self.deleteSelectedPolygonAction = QAction(QIcon('./images/icons/delete-new.png'), 'Delete selected polygon',
+                                                   self)
         self.deleteSelectedPolygonAction.triggered.connect(self.deleteSelectedPolygon)
+        self.deleteAllPolygonsAndResultsAction = QAction(QIcon('./images/icons/delete.png'),
+                                                         'Delete all polygon and results')
+        # self.deleteAllPolygonsAndResultsAction.triggered.connect()
+        # Analysis Menu
         self.analysisAction = QAction(QIcon('./images/icons/run.png'), 'Analysis', self)
         self.analysisAction.triggered.connect(self.analysis)
         self.removeSmallBlocksAction = QAction(QIcon('./images/icons/filter.png'), 'Remove small blocks', self)
@@ -204,7 +209,7 @@ class MainWindow(QMainWindow):
     '''
 
     def openFile(self):
-        filePath, fileType = QFileDialog.getOpenFileName(self, 'Choose the image', './',
+        filePath, fileType = QFileDialog.getOpenFileName(self, 'Choose the image', '',
                                                          'Image (*.jpg);;Image (*.png);;Image (*.tif)')
         if not filePath:
             QMessageBox.warning(self, 'No File Selected', 'No image file is selected.')
@@ -257,14 +262,16 @@ class MainWindow(QMainWindow):
         self.updateActionState()
 
     def quit(self):
+        self.close()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
         reply = QMessageBox.warning(self, 'Exit', 'Exit the program?',
                                     QMessageBox.Yes | QMessageBox.No,
                                     QMessageBox.No)
         if reply == QMessageBox.Yes:
-            QApplication.quit()
-
-    def closeEvent(self, a0: QCloseEvent) -> None:
-        self.quit()
+            event.accept()
+        else:
+            event.ignore()
 
     '''
     Edit Menu callback
@@ -318,8 +325,18 @@ class MainWindow(QMainWindow):
     def analysis(self):
         # progressDialog.show()
         # msgBox=QMessageBox.information(self, 'Analysising', 'The result is being calculated, please wait. ')
+        self.resultView.deleteAllLabels()
+        progress = QProgressDialog(self)
+        progress.setWindowTitle("Analyzing")
+        progress.setLabelText("Analyzing...")
+        progress.setCancelButtonText("cancel")
+        progress.setMinimumDuration(5)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setRange(0, len(self.originView.PolygonList))
         for i, polygon in enumerate(self.originView.PolygonList):
             self.resultView.addPolygonArea(polygon['geo'])
+            progress.setValue(i + 1)
+        progress.close()
         QMessageBox.information(self, 'Finished', 'Analysis is Finished.')
         self.updateActionState()
 
@@ -342,9 +359,10 @@ class MainWindow(QMainWindow):
     def showResultTable(self):
         from ImageLabelDataTable import LabelDataTable
         self.resultTable = LabelDataTable()
-        self.resultTable.setData(self.resultView.labelMask, self.realScale)
+        self.resultTable.setData(self.resultView.labelMask, self.realScale, self.originView.cropPolygon)
         self.resultTable.show()
         self.updateActionState()
+        self.resultTable.labelSelectedSignal.connect(self.resultView.setShowLabelList)
 
     def totorial(self):
         QDesktopServices.openUrl(QUrl('https://blog.cuger.cn'))

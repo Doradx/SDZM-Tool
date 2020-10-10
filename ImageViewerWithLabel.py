@@ -28,6 +28,8 @@ class ImageViewerWithLabel(ImageViewer):
         self.remove_small_objects = remove_small_objects
         self.remove_small_holes = remove_small_holes
 
+        self.showLabelList = np.array([], dtype=int)
+
     '''
     over load methods
     '''
@@ -37,7 +39,7 @@ class ImageViewerWithLabel(ImageViewer):
         label mask property
         '''
         ImageViewer.initUi(self)
-        self.labelMask = np.array([])
+        self.labelMask = np.array([], dtype=int)
         self.labelColors = []
         self.remove_small_objects = 64
         self.remove_small_holes = 64
@@ -96,8 +98,14 @@ class ImageViewerWithLabel(ImageViewer):
         self.updatePaintImage()
 
     def imageWithLabel2Mask(self):
+        labelMaskShown = np.zeros(self.labelMask.shape, dtype=int)
+        if len(self.showLabelList) > 0:
+            for label in self.showLabelList:
+                labelMaskShown[self.labelMask == label] = label
+        else:
+            labelMaskShown = self.labelMask
         from skimage import color
-        labelImg = color.label2rgb(self.labelMask, image=ImageViewerWithLabel.__qimage2narray(self.Image), bg_label=0,
+        labelImg = color.label2rgb(labelMaskShown, image=ImageViewerWithLabel.__qimage2narray(self.Image), bg_label=0,
                                    alpha=0.25)
         # labelImg=ImageViewerWithLabel.__qimage2narray(self.Image)
         return ImageViewerWithLabel.__narray2qimage(labelImg)
@@ -146,6 +154,9 @@ class ImageViewerWithLabel(ImageViewer):
         self.labelMask[mask > 0] = 0
         self.updatePaintImage()
 
+    def setShowLabelList(self, showLabelList):
+        self.showLabelList = showLabelList
+        self.updatePaintImage()
 
     def deleteLabels(self, labels):
         assert type(labels) == list
@@ -153,6 +164,10 @@ class ImageViewerWithLabel(ImageViewer):
             # delete label
             self.labelMask[self.labelMask == label] = 0
             # update label property
+        self.updatePaintImage()
+
+    def deleteAllLabels(self):
+        self.labelMask[self.labelMask > 0] = 0
         self.updatePaintImage()
 
     def removeSmallBlocks(self, remove_small_blocks=64):

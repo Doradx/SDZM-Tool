@@ -144,8 +144,8 @@ class ImageViewerWithPolygon(ImageViewer):
         return True
 
     def __delLastPointInTmpPolygon(self):
-        if len(self.tmpPolygon) > 0:
-            self.tmpPolygon.remove(len(self.tmpPolygon) - 1)
+        if len(self.tmpDrawPoints) > 0:
+            del self.tmpDrawPoints[len(self.tmpDrawPoints) - 1]
             self.update()
 
     '''

@@ -204,7 +204,7 @@ class ImageViewer(QWidget):
         self.update()
 
     def setCropPolygon(self, polygon: QPolygonF):
-        self.cropPolygon=polygon
+        self.cropPolygon = polygon
         self.update()
 
     def renderImage(self, remove_useless_background=False):
