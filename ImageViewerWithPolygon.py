@@ -211,14 +211,14 @@ class ImageViewerWithPolygon(ImageViewer):
         # draw polygon
         if len(self.polygonList):
             for polygon in self.polygonList:
-                pp = QPolygonF([QPointF(point) for point in polygon['geo']])
+                # pp = QPolygonF([QPointF(point[0], point[1]) for point in polygon['geo']])
                 if polygon['selected']:
                     painter.setPen(self.PolygonSelectedColor)
                     painter.setBrush(self.PolygonSelectedColor)
                 else:
                     painter.setPen(self.PolygonColor)
                     painter.setBrush(self.PolygonColor)
-                painter.drawPolygon(pp)
+                painter.drawPolygon(polygon['geo'])
         painter.end()
         if remove_useless_background and self.cropPolygon:
             return paintedImage.copy(painterPath.boundingRect().toRect())

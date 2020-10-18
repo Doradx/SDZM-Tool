@@ -17,7 +17,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QUrl
-from PyQt5.QtGui import QIcon, QPolygonF, QDesktopServices, QPixmap, QCloseEvent
+from PyQt5.QtGui import QIcon, QPolygonF, QDesktopServices, QPixmap, QCloseEvent, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QAction, QLabel, QProgressBar, QFileDialog, \
     QMessageBox, QInputDialog, QMainWindow, QProgressDialog
 
@@ -30,17 +30,6 @@ import json
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.imagePath = None
-        self.projectPath = None
-        self.initUi()
-
-    def initUi(self):
-
-        '''
-        ui
-        Returns:
-
-        '''
 
         # center widget
         self.setWindowTitle(
@@ -62,27 +51,19 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(topWidget)
 
         '''
-        status
-        '''
-
-        # moniter = QApplication.desktop().size()
-        moniter = QApplication.primaryScreen().size()
-        print('H: %s, W: %s' % (moniter.height(), moniter.width()))
-        self.resize(int(moniter.width() / 1.2), int(moniter.height() / 1.2))
-        self.move((moniter.width() - self.size().width()) / 2, (moniter.height() - self.size().height()) / 2)
-
-        self.realScale = None
-
-        '''
         actions
         '''
         # Project Menu
         self.projectNewAction = QAction(QIcon('./images/icons/folder-open.png'), 'New project', self)
         self.projectNewAction.triggered.connect(self.newProject)
         self.openProjectAction = QAction(QIcon('./images/icons/folder-open.png'), 'Open project', self)
+        self.openProjectAction.setShortcut(QKeySequence.Open)
         self.openProjectAction.triggered.connect(self.openProject)
         self.saveProjectAction = QAction(QIcon('./images/icons/save.png'), 'Save project', self)
+        self.saveProjectAction.setShortcut(QKeySequence.Save)
         self.saveProjectAction.triggered.connect(self.saveProject)
+        self.saveProjectAsAction = QAction(QIcon('./images/icons/save.png'), 'Save project as..', self)
+        self.saveProjectAsAction.triggered.connect(self.saveProjectAs)
 
         # File Menu
         self.openImageAction = QAction(QIcon('./images/icons/load-image.png'), 'Open image', self)
@@ -140,6 +121,7 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(self.openProjectAction)
         fileMenu.addAction(self.saveProjectAction)
+        fileMenu.addAction(self.saveProjectAsAction)
         fileMenu.addSeparator()
         saveMenu = fileMenu.addMenu('Export')
         saveMenu.addAction(self.saveImageWithPolygonAction)
@@ -188,15 +170,11 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.removeSmallHoleSAction)
         self.toolbar.addAction(self.showResultTableAction)
         self.toolbar.addSeparator()
-        # self.toolbar.addAction(self.documentAction)
-        # self.toolbar.addAction(self.infoAction)
+        self.toolbar.addAction(self.saveImageWithPolygonAction)
+        self.toolbar.addAction(self.saveImageWithMaskAction)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.aboutAction)
 
-        # action status
-        # self.saveImageWithPolygonAction.setDisabled(True)
-        # self.saveImageWithMaskAction.setDisabled(True)
-        # self.analysisAction.setDisabled(True)
-        # self.deleteSelectedPolygonAction.setDisabled(True)
         '''
         status bar
         '''
@@ -225,12 +203,30 @@ class MainWindow(QMainWindow):
         self.originView.MousePosChangedSignal.connect(update_mouse_pos_on_status_bar)
         self.resultView.MousePosChangedSignal.connect(update_mouse_pos_on_status_bar)
 
-        self.originView.PolygonDrawFinishedSignal.connect(self.updateActionState)
-        self.originView.LineDrawFinishedSIgnal.connect(self.updateActionState)
+        self.originView.PolygonDrawFinishedSignal.connect(self.__updateActionState)
+        self.originView.LineDrawFinishedSIgnal.connect(self.__updateActionState)
 
         self.originView.ViewPointChangeSignal.connect(self.syncViewPoint)
         self.resultView.ViewPointChangeSignal.connect(self.syncViewPoint)
-        self.updateActionState()
+        self.initUi()
+
+    def initUi(self):
+        self.imagePath = None
+        self.projectPath = None
+
+        self.realScale = None
+
+        '''
+        status
+        '''
+        # moniter = QApplication.desktop().size()
+        moniter = QApplication.primaryScreen().size()
+        print('H: %s, W: %s' % (moniter.height(), moniter.width()))
+
+        self.resize(int(moniter.width() / 1.2), int(moniter.height() / 1.2))
+        self.move((moniter.width() - self.size().width()) / 2, (moniter.height() - self.size().height()) / 2)
+
+        self.__updateActionState()
 
     '''
     File Menu callback
@@ -248,6 +244,7 @@ class MainWindow(QMainWindow):
             with open(filePath, 'r') as f:
                 project = json.load(f)
             # decode
+            self.initUi()
             project = JsonDecoding(project)
             self.imagePath = project['base_image']
             self.originView.setImage(imagePath=self.imagePath)
@@ -259,7 +256,7 @@ class MainWindow(QMainWindow):
             self.resultView.setViewPoint(scale=project['scale'], offset=project['offset'])
             self.resultView.addLabelMask(project['label_image'])
             self.projectPath = filePath
-            self.updateActionState()
+            self.__updateActionState()
         except Exception as e:
             QMessageBox.warning(self, 'Illegal Project Document',
                                 'Illegal project document, please select a legal one.')
@@ -288,10 +285,11 @@ class MainWindow(QMainWindow):
         if not filePath:
             QMessageBox.warning(self, 'No File Selected', 'No image file is selected.')
         else:
+            self.initUi()
             self.imagePath = filePath
             self.originView.setImage(imagePath=filePath)
             self.resultView.setImage(imagePath=filePath)
-        self.updateActionState()
+        self.__updateActionState()
 
     def saveImageWithPolygon(self):
         if not self.originView.Image:
@@ -333,7 +331,7 @@ class MainWindow(QMainWindow):
             self.originView.initUi()
             self.resultView.initUi()
 
-        self.updateActionState()
+        self.__updateActionState()
 
     def quit(self):
         self.close()
@@ -354,7 +352,7 @@ class MainWindow(QMainWindow):
     def syncViewPoint(self, oldOffset, newOffset, oldScal, newScale):
         self.originView.setViewPoint(newOffset, newScale)
         self.resultView.setViewPoint(newOffset, newScale)
-        self.updateActionState()
+        self.__updateActionState()
 
     def setRealScale(self):
         self.originView.startDraw(mode='scaleLine')
@@ -373,7 +371,7 @@ class MainWindow(QMainWindow):
             print('Real Scale: %s' % self.realScale)
 
         self.originView.LineDrawFinishedSIgnal.connect(scaleLineFinishedHandler)
-        self.updateActionState()
+        self.__updateActionState()
 
     def cropImage(self):
         # draw a polygon and make a mask for the image
@@ -385,17 +383,17 @@ class MainWindow(QMainWindow):
             # add polygon to originView and resultView
             self.originView.setCropPolygon(polygon)
             self.resultView.setCropPolygon(polygon)
-            self.updateActionState()
+            self.__updateActionState()
 
         self.originView.PolygonDrawFinishedSignal.connect(cropPolygonFinishedHandler)
 
     def drawPolygon(self):
         self.originView.startDraw(mode='polygon')
-        self.updateActionState()
+        self.__updateActionState()
 
     def deleteSelectedPolygon(self):
         self.originView.delPolygonSelected()
-        self.updateActionState()
+        self.__updateActionState()
 
     '''
     Analysis Menu callback
@@ -417,7 +415,7 @@ class MainWindow(QMainWindow):
             progress.setValue(i + 1)
         progress.close()
         QMessageBox.information(self, 'Finished', 'Analysis is Finished.')
-        self.updateActionState()
+        self.__updateActionState()
 
     def removeSmallBlocks(self):
         # get the setting
@@ -425,7 +423,7 @@ class MainWindow(QMainWindow):
         if not ok:
             return
         self.resultView.removeSmallBlocks(minBlockSizeVlue)
-        self.updateActionState()
+        self.__updateActionState()
 
     def removeSmallHoles(self):
         # get the setting
@@ -433,14 +431,14 @@ class MainWindow(QMainWindow):
         if not ok:
             return
         self.resultView.removeSmallHoles(minHoleValue)
-        self.updateActionState()
+        self.__updateActionState()
 
     def showResultTable(self):
         from ImageLabelDataTable import LabelDataTable
         self.resultTable = LabelDataTable()
         self.resultTable.setData(self.resultView.labelMask, self.realScale, self.originView.cropPolygon)
         self.resultTable.show()
-        self.updateActionState()
+        self.__updateActionState()
         self.resultTable.labelSelectedSignal.connect(self.resultView.setShowLabelList)
 
     def totorial(self):
@@ -462,13 +460,13 @@ class MainWindow(QMainWindow):
         #                         'SFRM Tool is designed to determine shear failure regions of rock joints based on image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
         #                             datetime.datetime.now().year))
 
-    def updateActionState(self):
+    def __updateActionState(self):
         '''
         update the state of the main window.
         '''
         # project
         self.saveProjectAction.setEnabled(self.imagePath is not None)
-
+        self.saveProjectAsAction.setEnabled(self.imagePath is not None)
         # file
 
         ## save
@@ -514,7 +512,7 @@ class MainWindow(QMainWindow):
         try:
             with open(filePath, mode='w+', encoding='utf-8') as f:
                 json.dump(project, f, cls=JsonEncoding)
-                QMessageBox.information(self, 'Success', 'Failed to write project file.')
+                QMessageBox.information(self, 'Success', 'Project file has been created successfully.')
         except Exception as e:
             QMessageBox.warning(self, 'Error', 'Failed to write project file.')
             return
@@ -556,7 +554,7 @@ def JsonDecoding(project):
             T = QPolygonF()
             for point in polygon['geo']:
                 T.append(QPointF(point[0], point[1]))
-        polygon['geo'] = T
+            polygon['geo'] = T
     # label_image
     limage = project['label_image']
     project['offset'] = QPointF(project['offset'][0], project['offset'][1])

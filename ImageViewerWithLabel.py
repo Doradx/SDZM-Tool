@@ -107,7 +107,6 @@ class ImageViewerWithLabel(ImageViewer):
         from skimage import color
         labelImg = color.label2rgb(labelMaskShown, image=ImageViewerWithLabel.__qimage2narray(self.Image), bg_label=0,
                                    alpha=0.25)
-        # labelImg=ImageViewerWithLabel.__qimage2narray(self.Image)
         return ImageViewerWithLabel.__narray2qimage(labelImg)
 
     def renderImage(self, remove_useless_background=False):
