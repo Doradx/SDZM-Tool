@@ -2,3 +2,5 @@ build
 dist
 venv
 res
+.idea
+__pycache__
