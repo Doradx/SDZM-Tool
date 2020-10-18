@@ -235,7 +235,7 @@ class ImageViewerWithLabel(ImageViewer):
         return mask.transpose()
 
     @staticmethod
-    def __imageLabelMerge(oldLabel, newLabel):
+    def __imageLabelMerge(oldLabel, newLabel=None):
         '''
         merge labels with no repeat label id.
         Args:
@@ -244,27 +244,21 @@ class ImageViewerWithLabel(ImageViewer):
 
         Returns: merged label without repeat label id
         '''
+
+        if not newLabel.any():
+            return oldLabel
+
         assert type(oldLabel) == np.ndarray
         assert type(newLabel) == np.ndarray
 
         if oldLabel.shape != newLabel.shape:
-            raise Exception('New label mask and old label mask must have the same size.')
+            newLabel = np.pad(newLabel,
+                              ((0, oldLabel.shape[0] - newLabel.shape[0]), (0, oldLabel.shape[1] - newLabel.shape[1])),
+                              'constant', constant_values=0)
 
-        from skimage import segmentation
-        newLabel, fw, inv = segmentation.relabel_sequential(newLabel, offset=oldLabel.max() + 1)
-        indexClashedInNewLabel = np.logical_and(newLabel > 0, oldLabel > 0)
-        newLabelClashed, indexN = np.unique(newLabel[indexClashedInNewLabel], return_index=True)
-        newLabelClashed = newLabelClashed[np.argsort(indexN)]
-        oldLabelClashed, indexO = np.unique(oldLabel[indexClashedInNewLabel], return_index=True)
-        oldLabelClashed = oldLabelClashed[np.argsort(indexO)]
-
-        for i in range(len(newLabelClashed)):
-            newLabel[newLabel == newLabelClashed[i]] = oldLabelClashed[i]
-
-        newLabel[indexClashedInNewLabel] = 0
-        label = np.around(oldLabel + newLabel).astype(np.int)
-        returnLabel, fw, inv = segmentation.relabel_sequential(label)
-        return returnLabel
+        from skimage import measure
+        relabeled = measure.label(oldLabel + newLabel > 0, connectivity=2, background=0)
+        return relabeled
 
 
 if __name__ == '__main__':
@@ -280,8 +274,7 @@ if __name__ == '__main__':
         print('缩放: %s -> %s' % (old, new))
 
 
-    demo.ScaleChangedSignal.connect(p)
-
+    # demo.ScaleChangedSignal.connect(p)
 
     def mouseUpdate(pos):
         print('鼠标移动监听: %s, %s' % (pos.x(), pos.y()))

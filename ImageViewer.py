@@ -21,8 +21,8 @@ from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QVBoxLayout, QHB
 
 
 class ImageViewer(QWidget):
-    ScaleChangedSignal = pyqtSignal([float, float], name='Scale Changed')
     MousePosChangedSignal = pyqtSignal([QPointF], name='Mouse Pos Changed')
+    ViewPointChangeSignal = pyqtSignal([QPointF, QPointF, float, float], name='View Point Changed')
 
     def __init__(self):
         super(ImageViewer, self).__init__()
@@ -42,15 +42,15 @@ class ImageViewer(QWidget):
         self.mousePos = QPointF(0, 0)
         self.mouseLeftButtonDown = False
 
-        self.Scale = 1  # 比例
-        self.Offset = QPointF(0, 0)  # 初始坐标
+        self.scale = 1  # 比例
+        self.offset = QPointF(0, 0)  # 初始坐标
 
         self.backgroundColor = QColor("#898989")
         # button
-        self.zoomInBtn = QPushButton(QIcon('./images/icons/Zoom In.png'), '')
+        self.zoomInBtn = QPushButton(QIcon('images/icons/zoom-in.png'), '')
         self.zoomInBtn.setToolTip('Zoom In')
         self.zoomInBtn.clicked.connect(self.zoomIn)
-        self.zoomOutBtn = QPushButton(QIcon('./images/icons/Zoom Out.png'), '')
+        self.zoomOutBtn = QPushButton(QIcon('images/icons/zoom-out.png'), '')
         self.zoomOutBtn.setToolTip('Zoom Out')
         self.zoomOutBtn.clicked.connect(self.zoomOut)
         self.reloadBtn = QPushButton(QIcon('./images/icons/expand.png'), '')
@@ -80,10 +80,10 @@ class ImageViewer(QWidget):
         self.pt = QPainter()
         if self.Image:
             renderImage = self.renderImage()
-            scaledImage = renderImage.scaled(int(renderImage.size().width() * self.Scale),
-                                             int(renderImage.size().height() * self.Scale))
+            scaledImage = renderImage.scaled(int(renderImage.size().width() * self.scale),
+                                             int(renderImage.size().height() * self.scale))
             self.pt.begin(self)
-            self.pt.drawImage(self.Offset, scaledImage)
+            self.pt.drawImage(self.offset, scaledImage)
             self.pt.end()
         self.draw_axis()
 
@@ -105,7 +105,7 @@ class ImageViewer(QWidget):
             QLineF(PR, PRU)
         ]
         self.pt.drawLines(lines)
-        self.pt.drawText(textRect, Qt.AlignCenter, str(np.around(axisLength / self.Scale, 2)) + 'PX')
+        self.pt.drawText(textRect, Qt.AlignCenter, str(np.around(axisLength / self.scale, 2)) + 'PX')
         self.pt.end()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -136,7 +136,8 @@ class ImageViewer(QWidget):
             print('鼠标左键拖移: %s, %s' % (event.x(), event.y()))
             posDiff = event.pos() - self.mousePos
             print('移动量: %s, %s' % (posDiff.x(), posDiff.y()))
-            self.Offset = self.Offset + posDiff
+            # self.offset = self.offset + posDiff
+            self.setViewPoint(offset=self.offset + posDiff)
 
         self.mousePos = event.pos()
         self.MousePosChangedSignal.emit(self._real2pix(event.pos()))
@@ -146,10 +147,10 @@ class ImageViewer(QWidget):
         pass
 
     def _pix2real(self, pos: QPointF):
-        return pos * self.Scale + self.Offset
+        return pos * self.scale + self.offset
 
     def _real2pix(self, pos: QPointF):
-        return (pos - self.Offset) / self.Scale
+        return (pos - self.offset) / self.scale
 
     def setImage(self, imagePath=None, image=None):
 
@@ -171,27 +172,37 @@ class ImageViewer(QWidget):
     def setImageCenter(self):
         if not self.Image:
             return None
-        self.setScale(min(self.size().width() / self.Image.size().width(),
-                          self.size().height() / self.Image.size().height()))
-        offsetX = (self.size().width() - self.Image.width() * self.Scale) / 2
-        offsetY = (self.size().height() - self.Image.height() * self.Scale) / 2
-        self.Offset = QPointF(offsetX, offsetY)
+        self.setViewPoint(scale=min(self.size().width() / self.Image.size().width(),
+                                    self.size().height() / self.Image.size().height()))
+        # self.setScale(min(self.size().width() / self.Image.size().width(),
+        #                   self.size().height() / self.Image.size().height()))
+        offsetX = (self.size().width() - self.Image.width() * self.scale) / 2
+        offsetY = (self.size().height() - self.Image.height() * self.scale) / 2
+        self.setViewPoint(offset=QPointF(offsetX, offsetY))
         self.update()
 
-    def setScale(self, newScale):
+    def setViewPoint(self, offset=None, scale=None):
         if not self.Image:
             return None
-        self.ScaleChangedSignal.emit(self.Scale, newScale)
-        self.Scale = newScale
-        self.update()
+        oldOffset = False
+        oldScale = False
+        if offset and not offset == self.offset:
+            oldOffset = self.offset
+            self.offset = offset
+        if scale and not scale == self.scale:
+            oldScale = self.scale
+            self.scale = scale
+        if oldOffset or oldScale:
+            self.ViewPointChangeSignal.emit(oldOffset if oldOffset else self.offset, self.offset,
+                                            oldScale if oldScale else self.scale, self.scale)
+            self.update()
 
     def zoomIn(self, pos=None, p=0.1):
         if not self.Image:
             return None
         if not pos:
             pos = QPointF(self.size().width() / 2, self.size().height() / 2)
-        self.setScale(self.Scale * (1 + p))
-        self.Offset = self.Offset - (pos - self.Offset) * p
+        self.setViewPoint(scale=self.scale * (1 + p), offset=self.offset - (pos - self.offset) * p)
         self.update()
 
     def zoomOut(self, pos=None, p=0.1):
@@ -199,8 +210,7 @@ class ImageViewer(QWidget):
             return None
         if not pos:
             pos = QPointF(self.size().width() / 2, self.size().height() / 2)
-        self.setScale(self.Scale * (1 - p))
-        self.Offset = self.Offset + (pos - self.Offset) * p
+        self.setViewPoint(scale=self.scale * (1 - p), offset=self.offset + (pos - self.offset) * p)
         self.update()
 
     def setCropPolygon(self, polygon: QPolygonF):
@@ -235,8 +245,7 @@ if __name__ == "__main__":
         print('缩放: %s -> %s' % (old, new))
 
 
-    demo.ScaleChangedSignal.connect(p)
-
+    # demo.ScaleChangedSignal.connect(p)
 
     def mouseUpdate(pos):
         print('鼠标移动监听: %s, %s' % (pos.x(), pos.y()))

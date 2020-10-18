@@ -42,7 +42,7 @@ class ImageViewerWithPolygon(ImageViewer):
     def initUi(self):
         ImageViewer.initUi(self)
         # self.polygonDrawing = False
-        self.PolygonList = []  # {geo:'',results:'', type:'', selected:False}
+        self.polygonList = []  # {geo:'',results:'', type:'', selected:False}
         # self.tmpPolygon = QPolygonF()
         self.tmpDrawPoints = []
         self.drawModel = 'polygon'  # 0. scaleLine, 1. cropPolygon, 2. polygon
@@ -79,10 +79,10 @@ class ImageViewerWithPolygon(ImageViewer):
                 self.__draw(event.pos())
             else:
                 # check if something is selected
-                for idx, polygon in enumerate(self.PolygonList):
+                for idx, polygon in enumerate(self.polygonList):
                     p = polygon['geo']
                     if p.containsPoint(self._real2pix(event.pos()), Qt.OddEvenFill):
-                        self.PolygonList[idx]['selected'] = ~self.PolygonList[idx]['selected']
+                        self.polygonList[idx]['selected'] = ~self.polygonList[idx]['selected']
                         self.update()
         elif event.button() == Qt.RightButton and self.drawing:
             # check if it's confirm of cancel
@@ -138,7 +138,7 @@ class ImageViewerWithPolygon(ImageViewer):
         if 'selected' not in polygon.keys():
             polygon['selected'] = False
         polygon['uid'] = str(uuid4())
-        self.PolygonList.append(polygon)
+        self.polygonList.append(polygon)
         self.PolygonListUpdatedSignal.emit('add', polygon)
         self.update()
         return True
@@ -160,41 +160,41 @@ class ImageViewerWithPolygon(ImageViewer):
         self.tmpDrawPoints = []
 
     def selectPolygon(self, uid):
-        for idx, polygon in enumerate(self.PolygonList):
+        for idx, polygon in enumerate(self.polygonList):
             if polygon['uid'] == uid:
-                self.PolygonList[idx]['selected'] = True
+                self.polygonList[idx]['selected'] = True
                 self.PolygonListUpdatedSignal.emit('selected', polygon)
                 break
         self.update()
 
     def unselectPolygon(self, uid):
-        for idx, polygon in enumerate(self.PolygonList):
+        for idx, polygon in enumerate(self.polygonList):
             if polygon['uid'] == uid:
-                self.PolygonList[idx]['selected'] = False
+                self.polygonList[idx]['selected'] = False
                 self.PolygonListUpdatedSignal.emit('unselected', polygon)
                 break
         self.update()
 
     def selectAllPolygon(self):
-        for idx, polygon in enumerate(self.PolygonList):
-            self.PolygonList[idx]['selected'] = True
+        for idx, polygon in enumerate(self.polygonList):
+            self.polygonList[idx]['selected'] = True
             self.PolygonListUpdatedSignal.emit('selected', polygon)
         self.update()
 
     def unselectAllPolygon(self):
-        for idx, polygon in enumerate(self.PolygonList):
-            self.PolygonList[idx]['selected'] = False
+        for idx, polygon in enumerate(self.polygonList):
+            self.polygonList[idx]['selected'] = False
             self.PolygonListUpdatedSignal.emit('unselected', polygon)
         self.update()
 
     def delPolygonSelected(self):
         unselectedPolygonList = []
-        for idx, polygon in enumerate(self.PolygonList):
+        for idx, polygon in enumerate(self.polygonList):
             if not polygon['selected']:
                 unselectedPolygonList.append(polygon)
             else:
                 self.PolygonListUpdatedSignal.emit('delete', polygon)
-        self.PolygonList = unselectedPolygonList
+        self.polygonList = unselectedPolygonList
         self.update()
 
     def renderImage(self, remove_useless_background=False):
@@ -209,8 +209,8 @@ class ImageViewerWithPolygon(ImageViewer):
             painter.setClipPath(painterPath)
         painter.drawImage(QPoint(), self.Image)
         # draw polygon
-        if len(self.PolygonList):
-            for polygon in self.PolygonList:
+        if len(self.polygonList):
+            for polygon in self.polygonList:
                 pp = QPolygonF([QPointF(point) for point in polygon['geo']])
                 if polygon['selected']:
                     painter.setPen(self.PolygonSelectedColor)
