@@ -174,7 +174,7 @@ class LabelDataTable(QWidget):
         import datetime
         filePath, fileType = QFileDialog.getSaveFileName(self, 'Save File',
                                                          './ShearFailureRegion-%s.csv' % (
-                                                             datetime.datetime.now().strftime('%Y%d%m%H%M%S')),
+                                                             datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
                                                          'CSV(*.csv)')
         if not filePath:
             QMessageBox.warning(self, 'No Path Selected', 'No Path is selected.')

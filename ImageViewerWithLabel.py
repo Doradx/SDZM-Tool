@@ -135,6 +135,8 @@ class ImageViewerWithLabel(ImageViewer):
         imgArr = ImageViewerWithLabel.__qimage2narray(self.Image)
         # convert image into gray mode if it's rgb mode.
         gray = color.rgb2gray(imgArr)
+        # check if the polygon is inside the cropPolygon
+        polygon = polygon.intersected(self.cropPolygon)
         # polygon to binary mask
         mask = ImageViewerWithLabel.__QPolygon2Mask(gray.shape, polygon)
         # __otsuWithMask2bw

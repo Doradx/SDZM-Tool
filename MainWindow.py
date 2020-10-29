@@ -251,6 +251,9 @@ class MainWindow(QMainWindow):
             self.originView.cropPolygon = project['crop_polygon']
             self.originView.polygonList = project['polygon']
             self.originView.setViewPoint(scale=project['scale'], offset=project['offset'])
+            if 'real_scale' in project:
+                self.realScale = project['real_scale']
+            
             self.resultView.setImage(imagePath=self.imagePath)
             self.resultView.cropPolygon = project['crop_polygon']
             self.resultView.setViewPoint(scale=project['scale'], offset=project['offset'])
@@ -299,7 +302,7 @@ class MainWindow(QMainWindow):
             return
         filePath, fileType = QFileDialog.getSaveFileName(self, 'Choose the path for image',
                                                          'ImageWithPolygon-%s.png' % (
-                                                             datetime.datetime.now().strftime('%Y%d%m%H%M%S')),
+                                                             datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
                                                          'Image (*.png);;')
         if not filePath:
             QMessageBox.warning(self, 'No Path Selected', 'No Path is selected.')
@@ -314,8 +317,8 @@ class MainWindow(QMainWindow):
             return
         import datetime
         filePath, fileType = QFileDialog.getSaveFileName(self, 'Choose the path for image',
-                                                         './ImageWithPolygon-%s.png' % (
-                                                             datetime.datetime.now().strftime('%Y%d%m%H%M%S')),
+                                                         'ImageWithPolygon-%s.png' % (
+                                                             datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
                                                          'Image (*.png);;')
         if not filePath:
             QMessageBox.warning(self, 'No Path Selected', 'No Path is selected.')
@@ -480,7 +483,8 @@ class MainWindow(QMainWindow):
 
         # edit
         self.setRealScaleAction.setEnabled(self.originView.Image is not None)
-        self.imageCropAction.setEnabled(self.originView.Image is not None and self.originView.cropPolygon is None)
+        # self.imageCropAction.setEnabled(self.originView.Image is not None and self.originView.cropPolygon is None)
+        self.imageCropAction.setEnabled(self.originView.Image is not None)
         self.drawPolygonAction.setEnabled(self.originView.Image is not None and self.originView.cropPolygon is not None)
         self.deleteSelectedPolygonAction.setEnabled(len(self.originView.polygonList) > 0)
 
@@ -506,6 +510,7 @@ class MainWindow(QMainWindow):
             'polygon': self.originView.polygonList,
             'offset': self.originView.offset,
             'scale': self.originView.scale,
+            'real_scale': self.realScale,
             'label_image': self.resultView.labelMask
         }
         filePath = self.projectPath
