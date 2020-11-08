@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         # Project Menu
         self.projectNewAction = QAction(QIcon('./images/icons/folder-open.png'), 'New project', self)
         self.projectNewAction.triggered.connect(self.newProject)
-        self.openProjectAction = QAction(QIcon('./images/icons/folder-open.png'), 'Open project', self)
+        self.openProjectAction = QAction(QIcon('./images/icons/folder-open.png'), 'Load project', self)
         self.openProjectAction.setShortcut(QKeySequence.Open)
         self.openProjectAction.triggered.connect(self.openProject)
         self.saveProjectAction = QAction(QIcon('./images/icons/save.png'), 'Save project', self)
@@ -66,9 +66,9 @@ class MainWindow(QMainWindow):
         self.saveProjectAsAction.triggered.connect(self.saveProjectAs)
 
         # File Menu
-        self.openImageAction = QAction(QIcon('./images/icons/load-image.png'), 'Open image', self)
+        self.openImageAction = QAction(QIcon('./images/icons/load-image.png'), 'Load image', self)
         self.openImageAction.triggered.connect(self.openFile)
-        self.saveImageWithPolygonAction = QAction(QIcon('./images/icons/save-polygon.png'), 'Save image with polygon',
+        self.saveImageWithPolygonAction = QAction(QIcon('./images/icons/save-polygon.png'), 'Save image with ROIs',
                                                   self)
         self.saveImageWithPolygonAction.triggered.connect(self.saveImageWithPolygon)
         self.saveImageWithMaskAction = QAction(QIcon('./images/icons/save-mask.png'), 'Save image with mask', self)
@@ -78,26 +78,26 @@ class MainWindow(QMainWindow):
         self.exitAction = QAction(QIcon('./images/icons/exit.png'), 'Exit', self)
         self.exitAction.triggered.connect(self.quit)
 
-        # Edit Menu
-        self.setRealScaleAction = QAction(QIcon('./images/icons/Ruler.png'), 'Set Real Scale', self)
+        # Pretreatment Menu
+        self.setRealScaleAction = QAction(QIcon('./images/icons/Ruler.png'), 'Set scale', self)
         self.setRealScaleAction.triggered.connect(self.setRealScale)
-        self.imageCropAction = QAction(QIcon('./images/icons/crop.png'), 'Crop the origin image', self)
+        self.imageCropAction = QAction(QIcon('./images/icons/crop.png'), 'Crop the image', self)
         self.imageCropAction.triggered.connect(self.cropImage)
-        self.drawPolygonAction = QAction(QIcon('./images/icons/polygon.png'), 'Create a new polygon on origin image',
+        self.drawPolygonAction = QAction(QIcon('./images/icons/polygon.png'), 'Create new ROI',
                                          self)
         self.drawPolygonAction.triggered.connect(self.drawPolygon)
-        self.deleteSelectedPolygonAction = QAction(QIcon('./images/icons/delete-new.png'), 'Delete selected polygon',
+        self.deleteSelectedPolygonAction = QAction(QIcon('./images/icons/delete-new.png'), 'Delete selected ROI',
                                                    self)
         self.deleteSelectedPolygonAction.triggered.connect(self.deleteSelectedPolygon)
         self.deleteAllPolygonsAndResultsAction = QAction(QIcon('./images/icons/delete.png'),
-                                                         'Delete all polygon and results')
+                                                         'Delete all ROIs and results')
         # self.deleteAllPolygonsAndResultsAction.triggered.connect()
         # Analysis Menu
         self.analysisAction = QAction(QIcon('./images/icons/run.png'), 'Analysis', self)
         self.analysisAction.triggered.connect(self.analysis)
         self.removeSmallBlocksAction = QAction(QIcon('./images/icons/filter-S.png'), 'Remove small regions', self)
         self.removeSmallBlocksAction.triggered.connect(self.removeSmallBlocks)
-        self.removeSmallHoleSAction = QAction(QIcon('./images/icons/filter-H.png'), 'Remove small holes', self)
+        self.removeSmallHoleSAction = QAction(QIcon('./images/icons/filter-H.png'), 'Fill small holes', self)
         self.removeSmallHoleSAction.triggered.connect(self.removeSmallHoles)
         self.showResultTableAction = QAction(QIcon('./images/icons/table.png'), 'Result Table', self)
         self.showResultTableAction.triggered.connect(self.showResultTable)
@@ -123,25 +123,35 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(self.saveProjectAction)
         fileMenu.addAction(self.saveProjectAsAction)
         fileMenu.addSeparator()
-        saveMenu = fileMenu.addMenu('Export')
-        saveMenu.addAction(self.saveImageWithPolygonAction)
-        saveMenu.addAction(self.saveImageWithMaskAction)
-        fileMenu.addSeparator()
+        # saveMenu = fileMenu.addMenu('Export')
+        # saveMenu.addAction(self.saveImageWithPolygonAction)
+        # saveMenu.addAction(self.saveImageWithMaskAction)
+        # fileMenu.addSeparator()
         fileMenu.addAction(self.closeAction)
         fileMenu.addAction(self.exitAction)
-        editMenu = menubar.addMenu('Edit')
-        editMenu.addAction(self.setRealScaleAction)
-        editMenu.addAction(self.imageCropAction)
-        editMenu.addAction(self.drawPolygonAction)
-        editMenu.addAction(self.deleteSelectedPolygonAction)
-        editMenu.addAction(self.deleteSelectedPolygonAction)
+        pretreatmentMenu = menubar.addMenu('Pretreatment')
+        pretreatmentMenu.addAction(self.setRealScaleAction)
+        pretreatmentMenu.addAction(self.imageCropAction)
+        pretreatmentMenu.addAction(self.drawPolygonAction)
+        pretreatmentMenu.addAction(self.deleteSelectedPolygonAction)
+        pretreatmentMenu.addAction(self.deleteSelectedPolygonAction)
         analysisMenu = menubar.addMenu('Analysis')
         analysisMenu.addAction(self.analysisAction)
-        analysisMenu.addSeparator()
-        analysisMenu.addAction(self.removeSmallBlocksAction)
-        analysisMenu.addAction(self.removeSmallHoleSAction)
-        analysisMenu.addSeparator()
-        analysisMenu.addAction(self.showResultTableAction)
+        # analysisMenu.addSeparator()
+        # analysisMenu.addAction(self.removeSmallBlocksAction)
+        # analysisMenu.addAction(self.removeSmallHoleSAction)
+        # analysisMenu.addSeparator()
+        # analysisMenu.addAction(self.showResultTableAction)
+        # Postprocessing
+        postProcessing = menubar.addMenu('Postprocessing')
+        postProcessing.addAction(self.removeSmallBlocksAction)
+        postProcessing.addAction(self.removeSmallHoleSAction)
+        postProcessing.addSeparator()
+        postProcessing.addAction(self.showResultTableAction)
+        postProcessing.addSeparator()
+        postProcessing.addAction(self.saveImageWithPolygonAction)
+        postProcessing.addAction(self.saveImageWithMaskAction)
+
         helpMenu = menubar.addMenu('Help')
         helpMenu.addAction(self.documentAction)
         helpMenu.addAction(self.infoAction)
@@ -166,10 +176,10 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.deleteSelectedPolygonAction)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.analysisAction)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.removeSmallBlocksAction)
         self.toolbar.addAction(self.removeSmallHoleSAction)
         self.toolbar.addAction(self.showResultTableAction)
-        self.toolbar.addSeparator()
         self.toolbar.addAction(self.saveImageWithPolygonAction)
         self.toolbar.addAction(self.saveImageWithMaskAction)
         self.toolbar.addSeparator()
@@ -253,7 +263,7 @@ class MainWindow(QMainWindow):
             self.originView.setViewPoint(scale=project['scale'], offset=project['offset'])
             if 'real_scale' in project:
                 self.realScale = project['real_scale']
-            
+
             self.resultView.setImage(imagePath=self.imagePath)
             self.resultView.cropPolygon = project['crop_polygon']
             self.resultView.setViewPoint(scale=project['scale'], offset=project['offset'])
@@ -364,6 +374,7 @@ class MainWindow(QMainWindow):
             if not mode == 'scaleLine':
                 return
             # show dialog for input the length of line
+            lineLength, ok = QInputDialog.getDouble(self, 'Input the length of line', 'Length of line(mm)')
             lineLength, ok = QInputDialog.getDouble(self, 'Input the length of line', 'Length of line(mm)')
             if not ok:
                 return
@@ -479,9 +490,9 @@ class MainWindow(QMainWindow):
         ## close
         self.closeAction.setEnabled(self.originView.Image is not None)
 
-        ## edit
+        ## Pretreatment
 
-        # edit
+        # pretreatment
         self.setRealScaleAction.setEnabled(self.originView.Image is not None)
         # self.imageCropAction.setEnabled(self.originView.Image is not None and self.originView.cropPolygon is None)
         self.imageCropAction.setEnabled(self.originView.Image is not None)
