@@ -369,12 +369,16 @@ class MainWindow(QMainWindow):
 
     def setRealScale(self):
         self.originView.startDraw(mode='scaleLine')
-
+        global finished
+        finished = False
         def scaleLineFinishedHandler(mode, line: QLineF):
+            global finished
+            if(finished):
+                return
             if not mode == 'scaleLine':
                 return
             # show dialog for input the length of line
-            lineLength, ok = QInputDialog.getDouble(self, 'Input the length of line', 'Length of line(mm)')
+            # lineLength, ok = QInputDialog.getDouble(self, 'Input the length of line', 'Length of line(mm)')
             lineLength, ok = QInputDialog.getDouble(self, 'Input the length of line', 'Length of line(mm)')
             if not ok:
                 return
@@ -382,6 +386,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning('Length of line must be positive number.')
                 return
             self.realScale = lineLength / line.length()
+            finished = True
             print('Real Scale: %s' % self.realScale)
 
         self.originView.LineDrawFinishedSIgnal.connect(scaleLineFinishedHandler)

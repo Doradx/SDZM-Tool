@@ -115,10 +115,12 @@ class ImageViewerWithPolygon(ImageViewer):
         self.drawing = False
         if self.drawModel in ['line', 'scaleLine']:
             if len(self.tmpDrawPoints) < 2:
+                self.tmpDrawPoints = []
                 return
             self.LineDrawFinishedSIgnal.emit(self.drawModel, QLineF(self.tmpDrawPoints[0], self.tmpDrawPoints[1]))
         elif self.drawModel in ['polygon', 'cropPolygon']:
             if len(self.tmpDrawPoints) < 3:
+                self.tmpDrawPoints = []
                 return
             polygon = QPolygonF()
             for p in self.tmpDrawPoints:
