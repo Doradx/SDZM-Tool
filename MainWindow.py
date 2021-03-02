@@ -71,7 +71,8 @@ class MainWindow(QMainWindow):
         self.saveImageWithPolygonAction = QAction(QIcon('./images/icons/save-polygon.png'), 'Save image with ROIs',
                                                   self)
         self.saveImageWithPolygonAction.triggered.connect(self.saveImageWithPolygon)
-        self.saveImageWithMaskAction = QAction(QIcon('./images/icons/save-mask.png'), 'Save image with mask', self)
+        self.saveImageWithMaskAction = QAction(QIcon('./images/icons/save-mask.png'),
+                                               'Save image with shear failure regions', self)
         self.saveImageWithMaskAction.triggered.connect(self.saveImageWithMask)
         self.closeAction = QAction(QIcon('./images/icons/close.png'), 'Close', self)
         self.closeAction.triggered.connect(self.closeImage)
@@ -95,6 +96,8 @@ class MainWindow(QMainWindow):
         # Analysis Menu
         self.analysisAction = QAction(QIcon('./images/icons/run.png'), 'Analysis', self)
         self.analysisAction.triggered.connect(self.analysis)
+        self.analysisRissAction = QAction(QIcon('./images/icons/run.png'), 'Analysis (Riss)', self)
+        self.analysisRissAction.triggered.connect(self.analysis_riss)
         self.removeSmallBlocksAction = QAction(QIcon('./images/icons/filter-S.png'), 'Remove small regions', self)
         self.removeSmallBlocksAction.triggered.connect(self.removeSmallBlocks)
         self.removeSmallHoleSAction = QAction(QIcon('./images/icons/filter-H.png'), 'Fill small holes', self)
@@ -137,6 +140,7 @@ class MainWindow(QMainWindow):
         pretreatmentMenu.addAction(self.deleteSelectedPolygonAction)
         analysisMenu = menubar.addMenu('Analysis')
         analysisMenu.addAction(self.analysisAction)
+        analysisMenu.addAction(self.analysisRissAction)
         # analysisMenu.addSeparator()
         # analysisMenu.addAction(self.removeSmallBlocksAction)
         # analysisMenu.addAction(self.removeSmallHoleSAction)
@@ -371,9 +375,10 @@ class MainWindow(QMainWindow):
         self.originView.startDraw(mode='scaleLine')
         global finished
         finished = False
+
         def scaleLineFinishedHandler(mode, line: QLineF):
             global finished
-            if(finished):
+            if (finished):
                 return
             if not mode == 'scaleLine':
                 return
@@ -436,20 +441,44 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, 'Finished', 'Analysis is Finished.')
         self.__updateActionState()
 
+    # 添加 riss 方法: Binary Images of Sheared Rock Joints: Characterization of Damaged Zones, doi: 10.1051/mmm:1996153
+    def analysis_riss(self):
+        self.resultView.deleteAllLabels()
+        progress = QProgressDialog(self)
+        progress.setWindowTitle("Analyzing")
+        progress.setLabelText("Analyzing...")
+        progress.setCancelButtonText("cancel")
+        progress.setMinimumDuration(5)
+        progress.setWindowModality(Qt.WindowModal)
+        polygons = []
+        for i, polygon in enumerate(self.originView.polygonList):
+            polygons.append(polygon['geo'])
+            progress.setValue(i + 1)
+        self.resultView.addRissPolygons(polygons)
+        progress.close()
+        QMessageBox.information(self, 'Finished', 'Analysis is Finished.')
+        self.__updateActionState()
+
     def removeSmallBlocks(self):
+        if not self.realScale:
+            QMessageBox.warning(self, 'Error', 'The scale should be set before.')
         # get the setting
-        minBlockSizeVlue, ok = QInputDialog.getInt(self, 'Input the filter value', 'Miniumn size of block', 64, 0)
+        minBlockSizeVlue, ok = QInputDialog.getDouble(self, 'Input the filter value(mm^2)',
+                                                      'Miniumn size of block(mm^2)', 1, 0)
         if not ok:
             return
-        self.resultView.removeSmallBlocks(minBlockSizeVlue)
+        self.resultView.removeSmallBlocks(minBlockSizeVlue / self.realScale / self.realScale)
         self.__updateActionState()
 
     def removeSmallHoles(self):
+        if not self.realScale:
+            QMessageBox.warning(self, 'Error', 'The scale should be set before.')
         # get the setting
-        minHoleValue, ok = QInputDialog.getInt(self, 'Input the filter value', 'Miniumn size of hole in block', 64, 0)
+        minHoleValue, ok = QInputDialog.getDouble(self, 'Input the filter value(mm^2)',
+                                                  'Miniumn size of hole in block(mm^2)', 1, 0)
         if not ok:
             return
-        self.resultView.removeSmallHoles(minHoleValue)
+        self.resultView.removeSmallHoles(minHoleValue / self.realScale / self.realScale)
         self.__updateActionState()
 
     def showResultTable(self):
@@ -506,8 +535,8 @@ class MainWindow(QMainWindow):
 
         # analysis
         self.analysisAction.setEnabled(len(self.originView.polygonList) > 0)
-        self.removeSmallBlocksAction.setEnabled(np.sum(self.resultView.labelMask) > 0)
-        self.removeSmallHoleSAction.setEnabled(np.sum(self.resultView.labelMask) > 0)
+        self.removeSmallBlocksAction.setEnabled(np.sum(self.resultView.labelMask) > 0 and self.realScale>0)
+        self.removeSmallHoleSAction.setEnabled(np.sum(self.resultView.labelMask) > 0 and self.realScale>0)
         self.showResultTableAction.setEnabled(np.sum(self.resultView.labelMask) > 0)
 
         self.update()

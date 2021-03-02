@@ -142,8 +142,8 @@ class ImageViewerWithLabel(ImageViewer):
         # __otsuWithMask2bw
         bw = ImageViewerWithLabel.__otsuWithMask2bw(gray, mask)
         # remove small objects
-        morphology.remove_small_objects(bw, min_size=self.remove_small_objects, connectivity=2, in_place=True)
-        morphology.remove_small_holes(bw, area_threshold=self.remove_small_holes, connectivity=2, in_place=True)
+        # morphology.remove_small_objects(bw, min_size=self.remove_small_objects, connectivity=2, in_place=True)
+        # morphology.remove_small_holes(bw, area_threshold=self.remove_small_holes, connectivity=2, in_place=True)
         # binary image to label image
         label = morphology.label(bw, connectivity=2)
         self.addLabelMask(label)
@@ -154,6 +154,33 @@ class ImageViewerWithLabel(ImageViewer):
         # remove mask area
         self.labelMask[mask > 0] = 0
         self.updatePaintImage()
+
+    # add Riss Polygons
+    def addRissPolygons(self, polygons):
+        # convert QImage into numpy array
+        imgArr = ImageViewerWithLabel.__qimage2narray(self.Image)
+        # convert image into gray mode if it's rgb mode.
+        gray = color.rgb2gray(imgArr)
+        maskedGrayImage = np.ma.masked_array(gray, ImageViewerWithLabel.__QPolygon2Mask(gray.shape, self.cropPolygon))
+        # polygon to binary mask
+        mask = np.empty(gray.shape)
+        for polygon in polygons:
+            mask += ImageViewerWithLabel.__QPolygon2Mask(gray.shape, polygon)
+        mask = mask > 0
+        # 获得像素值
+        pixels = gray[mask > 0]
+        # 计算 ROIs 中的灰度直方图
+        # hist, bin_edges = np.histogram(pixels.flatten(), bins=255, range=(-0.5, 255.5))
+        # 估算正态分布
+        mu = np.mean(pixels)  # 计算均值
+        sigma = np.std(pixels)
+        # 计算 m+1.95o, 得到阈值
+        threshold = mu + 1.96 * sigma
+        # 二值化
+        binary = maskedGrayImage > threshold
+        label = morphology.label(binary, connectivity=2)
+        print("RISS阈值: %f, 破坏像素数量： %d" % (threshold*255, np.sum(binary > 0)))
+        self.addLabelMask(label)
 
     def setShowLabelList(self, showLabelList):
         self.showLabelList = showLabelList

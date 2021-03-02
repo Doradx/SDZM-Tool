@@ -13,7 +13,7 @@
 from uuid import uuid4
 
 from PyQt5.QtCore import QPointF, pyqtSignal, QLineF, Qt, QPoint
-from PyQt5.QtGui import QIcon, QPolygonF, QColor, QMouseEvent, QKeyEvent, QImage, QPainter, QPainterPath
+from PyQt5.QtGui import QIcon, QPolygonF, QColor, QMouseEvent, QKeyEvent, QImage, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QWidget, QPushButton
 
 from ImageViewer import ImageViewer
@@ -27,8 +27,9 @@ class ImageViewerWithPolygon(ImageViewer):
     def __init__(self, allowAddPolygonManually=True, allowDelPolygonManually=True):
         super(ImageViewerWithPolygon, self).__init__()
         # additional property for polygon
-        self.PolygonSelectedColor = QColor(0, 0, 255, 100)
-        self.PolygonColor = QColor(0, 0, 255, 40)
+        self.PolygonSelectedColor = QColor(255, 0, 0, 100)
+        self.PolygonEdgeColor = QColor(0, 0, 255, 100)
+        self.PolygonColor = QColor(0, 255, 0, 35)
         self.tmpPolygonColor = QColor(255, 0, 0, 20)
         self.allowAddPolygonManually = allowAddPolygonManually
         self.allowDelPolygonManually = allowDelPolygonManually
@@ -211,14 +212,14 @@ class ImageViewerWithPolygon(ImageViewer):
             painter.setClipPath(painterPath)
         painter.drawImage(QPoint(), self.Image)
         # draw polygon
+        pen = QPen(self.PolygonEdgeColor, 5)
+        painter.setPen(pen)
         if len(self.polygonList):
             for polygon in self.polygonList:
                 # pp = QPolygonF([QPointF(point[0], point[1]) for point in polygon['geo']])
                 if polygon['selected']:
-                    painter.setPen(self.PolygonSelectedColor)
                     painter.setBrush(self.PolygonSelectedColor)
                 else:
-                    painter.setPen(self.PolygonColor)
                     painter.setBrush(self.PolygonColor)
                 painter.drawPolygon(polygon['geo'])
         painter.end()
