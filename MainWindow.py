@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
 
         # center widget
         self.setWindowTitle(
-            'Shear Failure Regions of Rock Joints Measurement Tool v1.0.0 (By Dorad, cug_xia@cug.edu.cn)')
+            'Shear Damage Zones Measurement Toolbox of Rock Joint v1.0.0 (By Ding Xia, cug_xia@cug.edu.cn)')
         self.setWindowIcon(QIcon('./images/icons/logo.png'))
         self.originView = ImageViewerWithPolygon(allowAddPolygonManually=True, allowDelPolygonManually=True)
         self.resultView = ImageViewerWithLabel()
@@ -494,7 +494,7 @@ class MainWindow(QMainWindow):
 
     def info(self):
         msgBox = QMessageBox(QMessageBox.NoIcon, 'SFRM Tool',
-                             'Shear Failure Regions of Rock Joints Measurement Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
+                             'Shear Damage Zones Measurement Toolbox of Rock Joint (the SDZM toolbox) is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         # QMessageBox.information(self, 'DSFRD Tool',
         #                         'Discontinuity Shear Failure Region Detection Tool is designed to detect shear failure region from discontinuity image which is taken after Direct Shear Test.')
         msgBox.setIconPixmap(QPixmap('./images/icons/logo.png'))
@@ -502,7 +502,7 @@ class MainWindow(QMainWindow):
 
     def about(self):
         QMessageBox.about(self, 'About Us',
-                          'SFRM Tool is designed to determine shear failure regions of rock joints based on image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
+                          'Shear Damage Zones Measurement Toolbox of Rock Joint (the SDZM toolbox) is designed to determine shear failure regions of rock joints based on image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
                               datetime.datetime.now().year))
         # QMessageBox.information(self, 'About Us',
         #                         'SFRM Tool is designed to determine shear failure regions of rock joints based on image which is taken after Direct Shear Test.\r\n\r\n\r\nAuthor: Ding Xia\r\nEmail: cug.xia@gmail.com\r\nBlog: https://blog.cuger.cn\r\nCopyright © 2019-%s All Rights Reserved.' % (
@@ -535,10 +535,12 @@ class MainWindow(QMainWindow):
 
         # analysis
         self.analysisAction.setEnabled(len(self.originView.polygonList) > 0)
-        self.removeSmallBlocksAction.setEnabled(np.sum(self.resultView.labelMask) > 0 and self.realScale>0)
-        self.removeSmallHoleSAction.setEnabled(np.sum(self.resultView.labelMask) > 0 and self.realScale>0)
-        self.showResultTableAction.setEnabled(np.sum(self.resultView.labelMask) > 0)
-
+        self.removeSmallBlocksAction.setEnabled(
+            type(self.resultView.labelMask) == np.ndarray and np.sum(
+                self.resultView.labelMask) > 0 and self.realScale > 0)
+        self.removeSmallHoleSAction.setEnabled(
+            type(self.resultView.labelMask) == np.ndarray and np.sum(self.resultView.labelMask) > 0 and self.realScale > 0)
+        self.showResultTableAction.setEnabled(type(self.resultView.labelMask) == np.ndarray and np.sum(self.resultView.labelMask) > 0)
         self.update()
 
     def aboutQt(self):
