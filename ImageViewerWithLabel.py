@@ -15,16 +15,21 @@ import sys
 import numpy as np
 from PyQt5.QtCore import QPointF, Qt, QPoint
 from PyQt5.QtGui import QImage, QPolygonF, QPainter, QPainterPath
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout
 from skimage import color, morphology
 
 from ImageViewer import ImageViewer
+from ColorCircle import ColorCircle
 
 
 class ImageViewerWithLabel(ImageViewer):
     def __init__(self, remove_small_objects=64, remove_small_holes=64):
         super(ImageViewerWithLabel, self).__init__()
-
+        self.colorBar = ColorCircle(50)
+        hBox = QHBoxLayout()
+        hBox.addStretch(1)
+        hBox.addWidget(self.colorBar)
+        self.mainLayout.insertLayout(1, hBox)
         self.remove_small_objects = remove_small_objects
         self.remove_small_holes = remove_small_holes
 
@@ -51,7 +56,7 @@ class ImageViewerWithLabel(ImageViewer):
         ImageViewer.setImage(self, imagePath, image)
         self.paintImage = self.Image
         # init mask property
-        self.labelMask = np.zeros([self.Image.height(), self.Image.width()])
+        self.labelMask = np.zeros([self.Image.height(), self.Image.width()], dtype=int)
         self.labelColors = []
         # update update widget
         self.update()
@@ -95,6 +100,9 @@ class ImageViewerWithLabel(ImageViewer):
         assert type(labelMask) == np.ndarray
         self.labelMask = ImageViewerWithLabel.__imageLabelMerge(self.labelMask, labelMask)
         # update view
+        # remove label out of cropPolygon
+        mask = ImageViewerWithLabel.__QPolygon2Mask(self.labelMask.shape, self.cropPolygon)
+        self.labelMask[mask == 0] = 0
         self.updatePaintImage()
 
     def imageWithLabel2Mask(self):
@@ -104,9 +112,26 @@ class ImageViewerWithLabel(ImageViewer):
                 labelMaskShown[self.labelMask == label] = label
         else:
             labelMaskShown = self.labelMask
-        from skimage import color
-        labelImg = color.label2rgb(labelMaskShown, image=ImageViewerWithLabel.__qimage2narray(self.Image), bg_label=0,
-                                   alpha=0.25)
+
+        # from skimage import color
+        # labelImg = color.label2rgb(labelMaskShown, image=ImageViewerWithLabel.__qimage2narray(self.Image), bg_label=0,
+        #                            alpha=0.25)
+
+        from Image import imageLabelProperty
+        self.labelData = imageLabelProperty(labelMaskShown)
+        labelImg = ImageViewerWithLabel.__qimage2narray(self.Image)
+        # labelImg = labelImg.astype(np.uint8)
+        labelImg = np.ones(labelImg.shape, dtype=int) * 255
+        for lData in self.labelData:
+            if lData.major_axis_length:
+                r = 1 - lData.minor_axis_length / lData.major_axis_length
+            else:
+                r = 0
+            lColor = self.colorBar.getColorByAngleAndRP(
+                lData.orientation + np.pi, r)
+            labelImg[lData.coords[:, 0], lData.coords[:, 1], 0] = lColor.red()
+            labelImg[lData.coords[:, 0], lData.coords[:, 1], 1] = lColor.green()
+            labelImg[lData.coords[:, 0], lData.coords[:, 1], 2] = lColor.blue()
         return ImageViewerWithLabel.__narray2qimage(labelImg)
 
     def renderImage(self, remove_useless_background=False):
@@ -119,6 +144,7 @@ class ImageViewerWithLabel(ImageViewer):
             painterPath = QPainterPath()
             painterPath.addPolygon(self.cropPolygon)
             painter.setClipPath(painterPath)
+            painter.drawPolygon(self.cropPolygon)
         painter.drawImage(QPoint(), self.paintImage)
         painter.end()
         if remove_useless_background and self.cropPolygon:
@@ -179,7 +205,7 @@ class ImageViewerWithLabel(ImageViewer):
         # 二值化
         binary = maskedGrayImage > threshold
         label = morphology.label(binary, connectivity=2)
-        print("RISS阈值: %f, 破坏像素数量： %d" % (threshold*255, np.sum(binary > 0)))
+        print("RISS阈值: %f, 破坏像素数量： %d" % (threshold * 255, np.sum(binary > 0)))
         self.addLabelMask(label)
 
     def setShowLabelList(self, showLabelList):
@@ -195,7 +221,9 @@ class ImageViewerWithLabel(ImageViewer):
         self.updatePaintImage()
 
     def deleteAllLabels(self):
-        self.labelMask[self.labelMask > 0] = 0
+        self.paintImage = self.Image
+        self.labelMask = np.zeros([self.Image.height(), self.Image.width()], dtype=int)
+        self.showLabelList = []
         self.updatePaintImage()
 
     def removeSmallBlocks(self, remove_small_blocks=64):
