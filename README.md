@@ -11,7 +11,7 @@ Run ```Setup.exe``` to install, and a shortcut will be created on the desktop.
 ## Main Window
 Double click the shortcut ```SFRD toolbox``` to start the program.
 
-![Main Window](https://raw.githubusercontent.com/Doradx/SDZM-Tool/master/images/main-window.png)
+![Main Window](https://github.com/Doradx/SDZMtoolbox/blob/master/static/MainWindow.png?raw=true)
 
 # Author
 Dorad
