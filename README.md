@@ -1,5 +1,5 @@
 ![](https://raw.githubusercontent.com/Doradx/RJSFRD-Tool/master/images/icons/logo.png)
-# RJSFRD Tool
+# SDZM Tool
 Shear Damage Zones Measurement Toolbox for Rock Joint (SDZM toolbox) is an easy-to-use python-based software for measuring shear failure regions of post-shearing rock joint using photos took by mobile phone.
 
 # Usage
