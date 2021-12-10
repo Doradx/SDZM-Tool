@@ -35,5 +35,5 @@ Double click the shortcut ```SFRD toolbox``` to start the program.
 ![Main Window](https://github.com/Doradx/SDZM-Tool/blob/master/images/main-window.png?raw=true)
 
 # Author
-Dorad
-cug.xia@gmail.com
+Ding Xia
+cug_xia@cug.edu.cn
